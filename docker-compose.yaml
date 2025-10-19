@@ -1,0 +1,160 @@
+version: '3.8'
+services:
+  nginx:
+    build:
+      context: ./services/nginx
+    container_name: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./www:/www
+      - ./services/nginx/ssl:/ssl
+      - ./services/nginx/conf.d:/etc/nginx/conf.d
+      - ./services/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./services/nginx/fastcgi-php.conf:/etc/nginx/fastcgi-php.conf
+      - ./services/nginx/fastcgi_params:/etc/nginx/fastcgi_params
+      - ./logs/nginx:/var/log/nginx
+    restart: always
+    networks:
+      - default
+
+  php:
+    build:
+      context: ./services/php
+      args:
+        PHP_VERSION: php:${PHP80_VERSION}-fpm-alpine
+        CONTAINER_PACKAGE_URL: ${CONTAINER_PACKAGE_URL}
+        PHP_EXTENSIONS: ${PHP80_EXTENSIONS}
+        TZ: "$TZ"
+    container_name: php
+    expose:
+      - "9501"
+    extra_hosts:
+      - "www.site1.com:10.88.0.1"
+    volumes:
+      - ${SOURCE_DIR}:/www/:rw
+      - ${PHP80_PHP_CONF_FILE}:/usr/local/etc/php/php.ini:ro
+      - ${PHP80_FPM_CONF_FILE}:/usr/local/etc/php-fpm.d/www.conf:rw
+      - ${PHP80_LOG_DIR}:/var/log/php
+      - ${DATA_DIR}/composer:/tmp/composer
+    restart: always
+    cap_add:
+      - SYS_PTRACE
+    networks:
+      - default
+
+  nacos:
+    image: nacos/nacos-server:${NACOS_VERSION}
+    container_name: nacos
+    environment:
+      PREFER_HOST_MODE: ${PREFER_HOST_MODE}
+      MODE: ${MODE}
+      SPRING_DATASOURCE_PLATFORM: ${SPRING_DATASOURCE_PLATFORM}
+      MYSQL_SERVICE_HOST: ${MYSQL_SERVICE_HOST}
+      MYSQL_SERVICE_PORT: ${MYSQL_SERVICE_PORT}
+      MYSQL_SERVICE_DB_NAME: ${MYSQL_SERVICE_DB_NAME}
+      MYSQL_SERVICE_USER: ${MYSQL_SERVICE_USER}
+      MYSQL_SERVICE_PASSWORD: ${MYSQL_SERVICE_PASSWORD}
+      MYSQL_SERVICE_DB_PARAM: ${MYSQL_SERVICE_DB_PARAM}
+      NACOS_AUTH_IDENTITY_KEY: ${NACOS_AUTH_IDENTITY_KEY}
+      NACOS_AUTH_IDENTITY_VALUE: ${NACOS_AUTH_IDENTITY_VALUE}
+      NACOS_AUTH_TOKEN: ${NACOS_AUTH_TOKEN}
+      NACOS_EXTENSION_NAMING_ISTIO_ENABLED: "false"
+      JVM_XMS: "1g"
+      JVM_XMX: "2g"
+      JVM_XMN: "1g"
+    volumes:
+      - ./logs/standalone-logs/:/home/nacos/logs
+    ports:
+      - "8848:8848"
+      - "9848:9848"
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: always
+    networks:
+      - default
+    deploy:
+      resources:
+        limits:
+          cpus: '2.00'
+          memory: 2G
+        reservations:
+          cpus: '1.00'
+          memory: 1G
+    command: sh -c "sleep 60 && /home/nacos/bin/docker-startup.sh"
+
+  mysql:
+    image: mysql:${MYSQL_VERSION}
+    container_name: mysql
+    ports:
+      - "${MYSQL_HOST_PORT}:3306"
+    volumes:
+      - ${MYSQL_CONF_FILE}:/etc/mysql/conf.d/mysql.cnf:ro
+      - ${DATA_DIR}/mysql:/var/lib/mysql/:rw
+      - ${MYSQL_LOG_DIR}:/var/log/mysql/:rw
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+      MYSQL_ROOT_HOST: "${MYSQL_ROOT_HOST}"
+      TZ: "$TZ"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+    networks:
+      - default
+
+  redis:
+    image: redis:${REDIS_VERSION}
+    container_name: redis
+    ports:
+      - "${REDIS_HOST_PORT}:6379"
+    volumes:
+      - ${REDIS_CONF_FILE}:/etc/redis.conf:ro
+      - ${DATA_DIR}/redis:/data/:rw
+    restart: always
+    entrypoint: ["redis-server", "/etc/redis.conf"]
+    environment:
+      TZ: "$TZ"
+    networks:
+      - default
+
+  consul:
+    container_name: consul
+    image: consul:1.15.4
+    ports:
+      - "8500:8500"
+    restart: always
+    environment:
+      - TZ=$TZ
+    volumes:
+      - ./services/consul/consul.json:/consul/config/consul.json:ro
+      - ./services/consul/certs/:/consul/config/certs/:ro
+      - ./logs/consul/:/consul/logs/
+      - ./data/consul:/consul/data
+    command:
+      [
+        "consul",
+        "agent",
+        "-server",
+        "-bootstrap",
+        "-data-dir",
+        "/consul",
+        "-ui",
+        "-bind",
+        "127.0.0.1",
+        "-client",
+        "0.0.0.0"
+      ]
+    networks:
+      - default
+
+networks:
+  default:
+    driver: bridge
+    ipam:
+      driver: default
