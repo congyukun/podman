@@ -44,47 +44,47 @@ services:
     networks:
       - default
 
-  nacos:
-    image: nacos/nacos-server:${NACOS_VERSION}
-    container_name: nacos
-    environment:
-      PREFER_HOST_MODE: ${PREFER_HOST_MODE}
-      MODE: ${MODE}
-      SPRING_DATASOURCE_PLATFORM: ${SPRING_DATASOURCE_PLATFORM}
-      MYSQL_SERVICE_HOST: ${MYSQL_SERVICE_HOST}
-      MYSQL_SERVICE_PORT: ${MYSQL_SERVICE_PORT}
-      MYSQL_SERVICE_DB_NAME: ${MYSQL_SERVICE_DB_NAME}
-      MYSQL_SERVICE_USER: ${MYSQL_SERVICE_USER}
-      MYSQL_SERVICE_PASSWORD: ${MYSQL_SERVICE_PASSWORD}
-      MYSQL_SERVICE_DB_PARAM: ${MYSQL_SERVICE_DB_PARAM}
-      NACOS_AUTH_IDENTITY_KEY: ${NACOS_AUTH_IDENTITY_KEY}
-      NACOS_AUTH_IDENTITY_VALUE: ${NACOS_AUTH_IDENTITY_VALUE}
-      NACOS_AUTH_TOKEN: ${NACOS_AUTH_TOKEN}
-      NACOS_AUTH_ENABLE: "false"
-      NACOS_EXTENSION_NAMING_ISTIO_ENABLED: "false"
-      JVM_XMS: "512m"
-      JVM_XMX: "1g"
-      JVM_XMN: "512m"
-    volumes:
-      - ./logs/standalone-logs/:/home/nacos/logs
-    ports:
-      - "8848:8848"
-      - "9848:9848"
-      - "8080:8080"
-    depends_on:
-      mysql:
-        condition: service_healthy
-    restart: always
-    networks:
-      - default
-    deploy:
-      resources:
-        limits:
-          cpus: '1.00'
-          memory: 1G
-        reservations:
-          cpus: '0.50'
-          memory: 512M
+  # nacos:
+  #   image: nacos/nacos-server:${NACOS_VERSION}
+  #   container_name: nacos
+  #   environment:
+  #     PREFER_HOST_MODE: ${PREFER_HOST_MODE}
+  #     MODE: ${MODE}
+  #     SPRING_DATASOURCE_PLATFORM: ${SPRING_DATASOURCE_PLATFORM}
+  #     MYSQL_SERVICE_HOST: ${MYSQL_SERVICE_HOST}
+  #     MYSQL_SERVICE_PORT: ${MYSQL_SERVICE_PORT}
+  #     MYSQL_SERVICE_DB_NAME: ${MYSQL_SERVICE_DB_NAME}
+  #     MYSQL_SERVICE_USER: ${MYSQL_SERVICE_USER}
+  #     MYSQL_SERVICE_PASSWORD: ${MYSQL_SERVICE_PASSWORD}
+  #     MYSQL_SERVICE_DB_PARAM: ${MYSQL_SERVICE_DB_PARAM}
+  #     NACOS_AUTH_IDENTITY_KEY: ${NACOS_AUTH_IDENTITY_KEY}
+  #     NACOS_AUTH_IDENTITY_VALUE: ${NACOS_AUTH_IDENTITY_VALUE}
+  #     NACOS_AUTH_TOKEN: ${NACOS_AUTH_TOKEN}
+  #     NACOS_AUTH_ENABLE: "false"
+  #     NACOS_EXTENSION_NAMING_ISTIO_ENABLED: "false"
+  #     JVM_XMS: "512m"
+  #     JVM_XMX: "1g"
+  #     JVM_XMN: "512m"
+  #   volumes:
+  #     - ./logs/standalone-logs/:/home/nacos/logs
+  #   ports:
+  #     - "8848:8848"
+  #     - "9848:9848"
+  #     - "8080:8080"
+  #   depends_on:
+  #     mysql:
+  #       condition: service_healthy
+  #   restart: always
+  #   networks:
+  #     - default
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         cpus: '1.00'
+  #         memory: 1G
+  #       reservations:
+  #         cpus: '0.50'
+  #         memory: 512M
 
   mysql:
     image: mysql:${MYSQL_VERSION}
