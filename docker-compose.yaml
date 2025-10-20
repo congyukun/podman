@@ -5,8 +5,8 @@ services:
       context: ./services/nginx
     container_name: nginx
     ports:
-      - "80:80"
-      - "443:443"
+      - "${NGINX_HTTP_HOST_PORT}:80"
+      - "${NGINX_HTTPS_HOST_PORT}:443"
     volumes:
       - ./www:/www
       - ./services/nginx/ssl:/ssl
@@ -60,10 +60,11 @@ services:
       NACOS_AUTH_IDENTITY_KEY: ${NACOS_AUTH_IDENTITY_KEY}
       NACOS_AUTH_IDENTITY_VALUE: ${NACOS_AUTH_IDENTITY_VALUE}
       NACOS_AUTH_TOKEN: ${NACOS_AUTH_TOKEN}
+      NACOS_AUTH_ENABLE: "false"
       NACOS_EXTENSION_NAMING_ISTIO_ENABLED: "false"
-      JVM_XMS: "1g"
-      JVM_XMX: "2g"
-      JVM_XMN: "1g"
+      JVM_XMS: "256m"
+      JVM_XMX: "512m"
+      JVM_XMN: "256m"
     volumes:
       - ./logs/standalone-logs/:/home/nacos/logs
     ports:
@@ -79,12 +80,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '2.00'
-          memory: 2G
-        reservations:
           cpus: '1.00'
           memory: 1G
-    command: sh -c "sleep 60 && /home/nacos/bin/docker-startup.sh"
+        reservations:
+          cpus: '0.50'
+          memory: 512M
 
   mysql:
     image: mysql:${MYSQL_VERSION}
