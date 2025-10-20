@@ -62,9 +62,9 @@ services:
       NACOS_AUTH_TOKEN: ${NACOS_AUTH_TOKEN}
       NACOS_AUTH_ENABLE: "false"
       NACOS_EXTENSION_NAMING_ISTIO_ENABLED: "false"
-      JVM_XMS: "256m"
-      JVM_XMX: "512m"
-      JVM_XMN: "256m"
+      JVM_XMS: "512m"
+      JVM_XMX: "1g"
+      JVM_XMN: "512m"
     volumes:
       - ./logs/standalone-logs/:/home/nacos/logs
     ports:
